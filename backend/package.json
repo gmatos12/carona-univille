@@ -7,7 +7,10 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "db:migrate": "node src/db/migrations/run.js",
+    "db:seed": "node src/db/seeds/run.js",
+    "db:setup": "npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
