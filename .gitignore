@@ -13,4 +13,9 @@ __pycache__/
 dist/
 build/
 .DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
 *.log
