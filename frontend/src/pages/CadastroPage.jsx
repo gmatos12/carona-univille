@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../services/api.js'
+import { cadastrar } from '../services/authService.js'
 
 const CAMPOS_OBRIGATORIOS = [
   { name: 'nome_completo', label: 'Nome completo', type: 'text', autoComplete: 'name' },
@@ -94,13 +94,7 @@ export function CadastroPage() {
     setEnviando(true)
 
     try {
-      await api.post('/auth/cadastro', {
-        nome_completo: valores.nome_completo.trim(),
-        matricula: valores.matricula.trim(),
-        email_institucional: valores.email_institucional.trim(),
-        senha: valores.senha,
-        telefone: valores.telefone.trim(),
-      })
+      await cadastrar(valores)
       setSucesso('Conta criada com sucesso. Faça login para continuar.')
     } catch (error) {
       setErroGeral(mensagemErroCadastro(error))

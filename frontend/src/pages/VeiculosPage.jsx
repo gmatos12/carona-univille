@@ -1,15 +1,6 @@
 import { useEffect, useState } from 'react'
 import VeiculoForm from '../components/VeiculoForm.jsx'
-import api from '../services/api.js'
-
-function extrairVeiculos(resposta) {
-  if (Array.isArray(resposta)) return resposta
-  return resposta?.veiculos ?? resposta?.data ?? []
-}
-
-function extrairVeiculo(resposta) {
-  return resposta?.veiculo ?? resposta?.data?.veiculo ?? null
-}
+import { atualizar, criar, excluir, listar } from '../services/veiculoService.js'
 
 function mensagemErro(error, fallback) {
   return typeof error?.message === 'string' && error.message.trim() ? error.message : fallback
@@ -33,8 +24,8 @@ export function VeiculosPage() {
 
     async function carregar() {
       try {
-        const resposta = await api.get('/veiculos')
-        if (ativo) setVeiculos(extrairVeiculos(resposta))
+        const dados = await listar()
+        if (ativo) setVeiculos(dados)
       } catch (error) {
         if (ativo) setErroGeral(mensagemErro(error, 'Não foi possível carregar os veículos.'))
       } finally {
@@ -66,22 +57,24 @@ export function VeiculosPage() {
 
     try {
       if (veiculoEmEdicao) {
-        const resposta = await api.put(`/veiculos/${veiculoEmEdicao.id}`, dados)
-        const atualizado = extrairVeiculo(resposta) ?? { ...veiculoEmEdicao, ...dados }
+        const veiculoAtualizado = (await atualizar(veiculoEmEdicao.id, dados)) ?? {
+          ...veiculoEmEdicao,
+          ...dados,
+        }
         setVeiculos((atual) =>
-          atual.map((veiculo) => (mesmoId(veiculo.id, atualizado.id) ? atualizado : veiculo)),
+          atual.map((veiculo) =>
+            mesmoId(veiculo.id, veiculoAtualizado.id) ? veiculoAtualizado : veiculo,
+          ),
         )
         setVeiculoEmEdicao(null)
         setSucesso('Veículo atualizado com sucesso.')
       } else {
-        const resposta = await api.post('/veiculos', dados)
-        const criado = extrairVeiculo(resposta)
+        const criado = await criar(dados)
 
         if (criado) {
           setVeiculos((atual) => [...atual, criado])
         } else {
-          const atualizados = await api.get('/veiculos')
-          setVeiculos(extrairVeiculos(atualizados))
+          setVeiculos(await listar())
         }
 
         setFormKey((atual) => atual + 1)
@@ -101,7 +94,7 @@ export function VeiculosPage() {
     setSucesso('')
 
     try {
-      await api.delete(`/veiculos/${veiculo.id}`)
+      await excluir(veiculo)
       setVeiculos((atual) => atual.filter((item) => !mesmoId(item.id, veiculo.id)))
       if (mesmoId(veiculoEmEdicao?.id, veiculo.id)) setVeiculoEmEdicao(null)
       setSucesso('Veículo removido com sucesso.')

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import api from '../services/api.js'
-import { useAuth } from '../state/auth.js'
+import { entrar } from '../services/authService.js'
 
 const VALOR_INICIAL = {
   email_institucional: '',
@@ -44,7 +43,6 @@ export function LoginPage() {
   const [erros, setErros] = useState({})
   const [erroGeral, setErroGeral] = useState('')
   const [enviando, setEnviando] = useState(false)
-  const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -72,12 +70,7 @@ export function LoginPage() {
     setEnviando(true)
 
     try {
-      const sessao = await api.post('/auth/login', {
-        email_institucional: valores.email_institucional.trim(),
-        senha: valores.senha,
-      })
-
-      login(sessao ?? {})
+      await entrar(valores)
       navigate(destino, { replace: true })
     } catch (error) {
       setErroGeral(mensagemErroLogin(error))

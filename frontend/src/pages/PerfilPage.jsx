@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import PerfilPublico from '../components/PerfilPublico.jsx'
-import api from '../services/api.js'
+import {
+  atualizarPerfil,
+  enviarFoto,
+  obterPerfil,
+  removerFoto,
+} from '../services/usuarioService.js'
 
 const LIMITE_FOTO = 2 * 1024 * 1024
 const TIPOS_FOTO = ['image/png', 'image/jpeg']
-
-function extrairPerfil(resposta) {
-  return resposta?.perfil ?? resposta?.usuario ?? resposta ?? null
-}
 
 function perfilParaFormulario(perfil = {}) {
   return {
@@ -52,8 +53,7 @@ export function PerfilPage() {
 
     async function carregar() {
       try {
-        const resposta = await api.get('/me')
-        const dados = extrairPerfil(resposta)
+        const dados = await obterPerfil()
         if (!ativo) return
         setPerfil(dados)
         setFormulario(perfilParaFormulario(dados))
@@ -95,12 +95,7 @@ export function PerfilPage() {
     setSalvando(true)
 
     try {
-      const resposta = await api.put('/me', {
-        nome_completo: formulario.nome_completo.trim(),
-        email_institucional: formulario.email_institucional.trim(),
-        telefone: formulario.telefone.trim(),
-      })
-      const dados = extrairPerfil(resposta) ?? { ...perfil, ...formulario }
+      const dados = (await atualizarPerfil(formulario)) ?? { ...perfil, ...formulario }
       setPerfil(dados)
       setFormulario(perfilParaFormulario(dados))
       setSucesso('Dados pessoais atualizados com sucesso.')
@@ -111,13 +106,8 @@ export function PerfilPage() {
     }
   }
 
-  async function aplicarRespostaFoto(resposta) {
-    let dados = extrairPerfil(resposta)
-
-    if (!dados) {
-      const atualizado = await api.get('/me')
-      dados = extrairPerfil(atualizado)
-    }
+  async function aplicarRespostaFoto(dados) {
+    if (!dados) dados = await obterPerfil()
 
     setPerfil(dados)
     setFormulario(perfilParaFormulario(dados))
@@ -146,12 +136,9 @@ export function PerfilPage() {
       return
     }
 
-    const dados = new FormData()
-    dados.append('foto', arquivo)
-
     try {
-      const resposta = await api.post('/me/foto', dados)
-      await aplicarRespostaFoto(resposta)
+      const dados = await enviarFoto(arquivo)
+      await aplicarRespostaFoto(dados)
     } catch (error) {
       setErroFoto(mensagemErro(error, 'Não foi possível salvar a foto de perfil.'))
     } finally {
@@ -164,8 +151,8 @@ export function PerfilPage() {
     setSucesso('')
 
     try {
-      const resposta = await api.delete('/me/foto')
-      await aplicarRespostaFoto(resposta)
+      const dados = await removerFoto()
+      await aplicarRespostaFoto(dados)
     } catch (error) {
       setErroFoto(mensagemErro(error, 'Não foi possível remover a foto de perfil.'))
     }

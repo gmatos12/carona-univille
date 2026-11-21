@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import api from '../services/api.js'
+import { perfilPublico, urlFotoPerfil } from '../services/usuarioService.js'
+
+export { urlFotoPerfil }
 
 export function somenteCamposPublicos(perfil = {}) {
   return {
@@ -34,21 +36,6 @@ export function formatarMedia(valor) {
   return Number.isFinite(numero) ? numero.toFixed(1) : 'Sem avaliações'
 }
 
-export function urlFotoPerfil(caminho) {
-  if (!caminho) return null
-
-  const valor = String(caminho)
-  if (/^(https?:)?\/\//i.test(valor) || valor.startsWith('data:') || valor.startsWith('/')) {
-    return valor
-  }
-
-  const nomeArquivo = valor.split(/[\\/]/).filter(Boolean).pop()
-  if (!nomeArquivo) return null
-
-  const base = String(api.baseURL ?? '').replace(/\/api\/?$/, '')
-  return `${base}/uploads/${encodeURIComponent(nomeArquivo)}`
-}
-
 export function PerfilPublico({ perfil: perfilProp, usuarioId, titulo = 'Perfil público' }) {
   const [perfilCarregado, setPerfilCarregado] = useState(null)
   const [carregando, setCarregando] = useState(
@@ -65,10 +52,8 @@ export function PerfilPublico({ perfil: perfilProp, usuarioId, titulo = 'Perfil 
 
     async function carregar() {
       try {
-        const resposta = await api.get(
-          `/usuarios/${encodeURIComponent(usuarioId)}/perfil-publico`,
-        )
-        if (ativo) setPerfilCarregado(resposta?.perfil ?? resposta ?? null)
+        const dados = await perfilPublico(usuarioId)
+        if (ativo) setPerfilCarregado(dados)
       } catch (error) {
         if (ativo) {
           setErro(

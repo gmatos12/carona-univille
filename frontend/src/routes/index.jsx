@@ -1,4 +1,5 @@
-import { Link, Route, Routes } from 'react-router-dom'
+import { Link, Navigate, Route, Routes } from 'react-router-dom'
+import { useAuth } from '../state/auth.js'
 import ProtectedRoute from './ProtectedRoute.jsx'
 
 const pageModules = typeof import.meta.glob === 'function'
@@ -7,8 +8,8 @@ const pageModules = typeof import.meta.glob === 'function'
 
 const ROUTE_DEFINITIONS = [
   { id: 'home', path: '/', title: 'Início', page: 'HomePage', nav: true },
-  { id: 'login', path: '/login', title: 'Entrar', page: 'LoginPage' },
-  { id: 'cadastro', path: '/cadastro', title: 'Criar conta', page: 'CadastroPage' },
+  { id: 'login', path: '/login', title: 'Entrar', page: 'LoginPage', guest: true },
+  { id: 'cadastro', path: '/cadastro', title: 'Criar conta', page: 'CadastroPage', guest: true },
   {
     id: 'busca',
     path: '/busca',
@@ -74,6 +75,12 @@ function PagePlaceholder({ title }) {
   )
 }
 
+function GuestOnlyRoute({ children, redirectTo = '/perfil' }) {
+  const { isAuthenticated } = useAuth()
+  if (isAuthenticated) return <Navigate to={redirectTo} replace />
+  return children ?? null
+}
+
 function NotFound() {
   return (
     <section className="page-not-found">
@@ -112,10 +119,12 @@ export const navigationItems = appRoutes
     to: route.path,
     label: route.title,
     protected: Boolean(route.protected),
+    guest: Boolean(route.guest),
   }))
 
 export function renderRouteElement(route) {
   const content = route.element ?? <PagePlaceholder title={route.title} />
+  if (route.guest) return <GuestOnlyRoute>{content}</GuestOnlyRoute>
   if (!route.protected) return content
   return <ProtectedRoute>{content}</ProtectedRoute>
 }
@@ -131,5 +140,5 @@ export function AppRoutes({ routes = appRoutes, notFound = <NotFound /> }) {
   )
 }
 
-export { NotFound, PagePlaceholder }
+export { NotFound, GuestOnlyRoute, PagePlaceholder }
 export default AppRoutes
