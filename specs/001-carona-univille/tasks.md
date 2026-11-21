@@ -58,7 +58,7 @@ description: "Task list for feature implementation"
 - [X] T015 Configurar Express com JSON, CORS, arquivos estáticos controlados de uploads, rota de healthcheck, tratamento de erros e mecanismo de montagem de roteadores sem imports de arquivos ainda inexistentes em `backend/src/app.js` e bootstrap em `backend/src/server.js`. Requisitos: RNF-001, RNF-002, RNF-005; infraestrutura compartilhada
 - [X] T016 [P] Implementar cliente HTTP base com baseURL por ambiente, interceptação de Bearer token e propagação de erros da API em `frontend/src/services/api.js`. Requisitos: RNF-002, RNF-005; infraestrutura compartilhada
 - [X] T017 [P] Implementar estado mínimo de sessão/usuário e guarda de rotas protegidas em `frontend/src/state/auth.js` e `frontend/src/routes/ProtectedRoute.jsx`. Requisitos: RF-005, RNF-002, RNF-005
-- [ ] T018 Configurar shell da aplicação, navegação principal e registro de rotas iniciais em `frontend/src/main.jsx`, `frontend/src/App.jsx` e `frontend/src/routes/index.jsx`. Requisitos: RNF-001, RNF-005; infraestrutura compartilhada
+- [X] T018 Configurar shell da aplicação, navegação principal e registro de rotas iniciais em `frontend/src/main.jsx`, `frontend/src/App.jsx` e `frontend/src/routes/index.jsx`. Requisitos: RNF-001, RNF-005; infraestrutura compartilhada
 - [ ] T019 [P] Criar helpers de testes de integração com app Express, banco SQLite temporário, migrations, seed e reset entre testes em `backend/tests/integration/helpers/testDb.js` e `backend/tests/integration/helpers/app.js`. Requisitos: RNF-004, RNF-006
 
 **Checkpoint**: foundation pronta; as User Stories podem começar em paralelo, respeitando as dependências naturais.
