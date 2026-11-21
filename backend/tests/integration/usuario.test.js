@@ -68,9 +68,16 @@ describe('Integração de perfil próprio e público (RF-003, RF-004, RNF-002, R
       ...overrides,
     }
     const resultado = await contexto.db.run(
-      `INSERT INTO usuarios (nome_completo, matricula, email_institucional, senha_hash, telefone)
-       VALUES (?, ?, ?, ?, ?)`,
-      [dados.nome_completo, dados.matricula, dados.email_institucional, dados.senha_hash, dados.telefone],
+      `INSERT INTO usuarios (nome_completo, matricula, email_institucional, senha_hash, telefone, foto_perfil_path)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        dados.nome_completo,
+        dados.matricula,
+        dados.email_institucional,
+        dados.senha_hash,
+        dados.telefone,
+        dados.foto_perfil_path ?? null,
+      ],
     )
     return contexto.db.get('SELECT * FROM usuarios WHERE id = ?', [resultado.lastID])
   }
