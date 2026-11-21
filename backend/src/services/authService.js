@@ -125,6 +125,7 @@ export class AuthService {
           },
           tx,
         )
+        await this.matriculas.marcarUtilizada(normalizado.matricula, tx)
         return mapearPerfilProprio(usuario)
       } catch (error) {
         traduzirErro(error)
