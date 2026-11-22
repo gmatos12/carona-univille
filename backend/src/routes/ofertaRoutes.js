@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { cancelarOferta } from '../controllers/cancelamentoController.js'
 import { authenticate } from '../middlewares/auth.js'
 import {
   atualizar,
@@ -15,6 +16,7 @@ router.post('/', criar)
 router.get('/busca', buscar)
 router.get('/:id', detalhar)
 router.put('/:id', atualizar)
+router.post('/:id/cancelar', cancelarOferta)
 
 export { router, router as routes }
 export default router
