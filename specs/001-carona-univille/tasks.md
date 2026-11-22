@@ -165,8 +165,8 @@ description: "Task list for feature implementation"
 
 > Escrever os testes primeiro e confirmar que falham antes da implementação.
 
-- [ ] T054 [P] [US4] Teste unitário das regras de prazo e pontuação: passageiro ≥24h = 0, <24h = 1, após horário = bloqueado; motorista com reservas = 1, aplicando "Sem bloqueio automático; cancelamentos por exclusão de conta não geram penalidade." em `backend/tests/unit/cancelamentoRegras.test.js`. Requisitos: RF-015, RF-016, RF-025, RNF-004, RN-005, CA-005
-- [ ] T055 [P] [US4] Teste de integração de cancelamentos cobrando vaga liberada antes do início, oferta/reservas canceladas pelo motorista, pontos, natureza do cancelamento, histórico e conta ainda ativa em `backend/tests/integration/cancelamentos.test.js`. Requisitos: RF-015, RF-016, RF-025, RNF-004, RN-005, CA-005
+- [X] T054 [P] [US4] Teste unitário das regras de prazo e pontuação: passageiro ≥24h = 0, <24h = 1, após horário = bloqueado; motorista com reservas = 1, aplicando "Sem bloqueio automático; cancelamentos por exclusão de conta não geram penalidade." em `backend/tests/unit/cancelamentoRegras.test.js`. Requisitos: RF-015, RF-016, RF-025, RNF-004, RN-005, CA-005
+- [X] T055 [P] [US4] Teste de integração de cancelamentos cobrando vaga liberada antes do início, oferta/reservas canceladas pelo motorista, pontos, natureza do cancelamento, histórico e conta ainda ativa em `backend/tests/integration/cancelamentos.test.js`. Requisitos: RF-015, RF-016, RF-025, RNF-004, RN-005, CA-005
 
 ### Implementation for User Story 4
 
