@@ -24,6 +24,7 @@ const ROUTE_DEFINITIONS = [
     title: 'Nova oferta',
     page: 'OfertaFormPage',
     protected: true,
+    nav: true,
   },
   {
     id: 'ofertaDetalhe',

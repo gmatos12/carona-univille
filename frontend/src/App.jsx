@@ -33,6 +33,9 @@ function Navigation() {
       <div className="app-session">
         {isAuthenticated ? (
           <>
+            <Link className="app-nav-link app-cta" to="/ofertas/nova">
+              Nova oferta
+            </Link>
             <span className="app-user-name">{user?.nome_completo || 'Usuário'}</span>
             <button type="button" onClick={logout}>
               Sair

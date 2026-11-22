@@ -16,7 +16,7 @@ const DEFAULT_ROUTER_DEFINITIONS = [
   { path: '/api', file: 'routes/usuarioRoutes.js' },
   { path: '/api/veiculos', file: 'routes/veiculoRoutes.js' },
   { path: '/api/ofertas', file: 'routes/ofertaRoutes.js' },
-  { path: '/api/reservas', file: 'routes/reservaRoutes.js' },
+  { path: '/api', file: 'routes/reservaRoutes.js' },
   { path: '/api/recorrencias', file: 'routes/recorrenciaRoutes.js' },
   { path: '/api/minhas-viagens', file: 'routes/minhasViagensRoutes.js' },
 ]
