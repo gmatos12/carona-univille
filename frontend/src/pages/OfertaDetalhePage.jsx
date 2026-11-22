@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { dividirDataHora, mensagemErroOferta, ofertaService } from '../services/ofertaService.js'
+import { mensagemErroReserva, reservaService } from '../services/reservaService.js'
 
 function paradasComoTexto(paradas) {
   let pontos = []
@@ -29,14 +30,28 @@ function rotuloSituacao(situacao) {
   return rotulos[chave] ?? chave
 }
 
+function mensagemDisponibilidade({ confirmada, lotada, antesDaPartida, aberta }) {
+  if (confirmada) return 'Sua reserva foi confirmada para esta viagem.'
+  if (lotada) return 'Não há vagas disponíveis nesta oferta.'
+  if (!antesDaPartida) return 'O horário de saída já passou.'
+  if (!aberta) return 'Esta oferta não aceita novas reservas.'
+  return ''
+}
+
 export function OfertaDetalhePage() {
   const { id } = useParams()
   const [oferta, setOferta] = useState(null)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
+  const [reservando, setReservando] = useState(false)
+  const [reservaConfirmada, setReservaConfirmada] = useState(false)
+  const [feedbackReserva, setFeedbackReserva] = useState(null)
 
   useEffect(() => {
     let ativo = true
+
+    setReservaConfirmada(false)
+    setFeedbackReserva(null)
 
     async function carregar() {
       try {
@@ -54,6 +69,39 @@ export function OfertaDetalhePage() {
       ativo = false
     }
   }, [id])
+
+  async function recarregarOferta() {
+    try {
+      const atualizada = await ofertaService.buscarPorId(id)
+      setOferta(atualizada)
+      return atualizada
+    } catch {
+      return null
+    }
+  }
+
+  async function reservarVaga() {
+    setReservando(true)
+    setFeedbackReserva(null)
+
+    try {
+      await reservaService.criar(id)
+      setReservaConfirmada(true)
+      setFeedbackReserva({
+        tipo: 'sucesso',
+        mensagem: 'Reserva confirmada. Sua vaga está garantida.',
+      })
+      await recarregarOferta()
+    } catch (error) {
+      setFeedbackReserva({
+        tipo: 'erro',
+        mensagem: mensagemErroReserva(error, 'Não foi possível reservar esta vaga.'),
+      })
+      await recarregarOferta()
+    } finally {
+      setReservando(false)
+    }
+  }
 
   if (carregando) return <section className="oferta-detalhe-page"><p>Carregando oferta...</p></section>
 
@@ -76,6 +124,20 @@ export function OfertaDetalhePage() {
   const vagasTotais = Number(oferta.vagas_total ?? oferta.vagas ?? 0)
   const valor = Number(oferta.valor ?? 0)
   const situacao = oferta.situacao ?? oferta.status ?? 'ABERTA'
+  const estado = String(oferta.estado ?? 'ABERTA').toUpperCase()
+  const partida = new Date(oferta.data_hora_saida)
+  const antesDaPartida = !Number.isNaN(partida.getTime()) && partida.getTime() > Date.now()
+  const lotada = String(situacao).toUpperCase() === 'LOTADA' || vagasDisponiveis <= 0
+  const aceitaReservas = oferta.aceita_reservas === undefined
+    ? estado === 'ABERTA' && antesDaPartida && !lotada
+    : Boolean(oferta.aceita_reservas)
+  const podeReservar = aceitaReservas && !lotada && !reservaConfirmada && !reservando
+  const disponibilidade = mensagemDisponibilidade({
+    confirmada: reservaConfirmada,
+    lotada,
+    antesDaPartida,
+    aberta: estado === 'ABERTA',
+  })
 
   return (
     <section className="oferta-detalhe-page">
@@ -124,6 +186,24 @@ export function OfertaDetalhePage() {
           {veiculo.cor ? ` (${veiculo.cor})` : ''}
         </p>
         {veiculo.placa && <p>Placa: {veiculo.placa}</p>}
+      </section>
+
+      {feedbackReserva && (
+        <p
+          className={`auth-message auth-message-${feedbackReserva.tipo === 'sucesso' ? 'success' : 'error'}`}
+          role={feedbackReserva.tipo === 'sucesso' ? 'status' : 'alert'}
+          aria-live="polite"
+        >
+          {feedbackReserva.mensagem}
+        </p>
+      )}
+
+      <section aria-labelledby="detalhe-reserva">
+        <h2 id="detalhe-reserva">Reserva</h2>
+        <p>{disponibilidade || 'Reserve sua vaga nesta viagem.'}</p>
+        <button type="button" onClick={reservarVaga} disabled={!podeReservar}>
+          {reservando ? 'Reservando...' : reservaConfirmada ? 'Reserva confirmada' : 'Reservar vaga'}
+        </button>
       </section>
 
       <div className="form-actions">
