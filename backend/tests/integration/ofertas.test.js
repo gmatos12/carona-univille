@@ -239,6 +239,41 @@ describe('Integração de criação e edição de ofertas (RF-008, RF-009, RNF-0
     expect(salva.data_hora_saida).toBe(SAIDA_FUTURA)
   })
 
+  it('[RF-009/RNF-004] reenvio idêntico não altera timestamp nem registra histórico', async () => {
+    const motorista = await criarUsuario()
+    const passageiro = await criarUsuario({
+      matricula: MATRICULA_PASSAGEIRO,
+      email_institucional: 'bruno.lima@univille.br',
+    })
+    const veiculo = await criarVeiculo(motorista)
+    const criacao = await criarOfertaViaApi(motorista, veiculo)
+    expect([200, 201]).toContain(criacao.status)
+    const ofertaId = desembrulhar(criacao.body).id
+      ?? (await contexto.db.get('SELECT id FROM ofertas WHERE motorista_id = ?', [motorista.id])).id
+    await criarReserva({ id: ofertaId }, passageiro)
+
+    const antes = await contexto.db.get('SELECT * FROM ofertas WHERE id = ?', [ofertaId])
+    const eventosAntes = await eventosDaOferta(ofertaId)
+    await new Promise((resolve) => setTimeout(resolve, 20))
+
+    const resposta = await editarOfertaViaApi(motorista, ofertaId, {
+      origem: antes.origem,
+      destino: antes.destino,
+      data_hora_saida: antes.data_hora_saida,
+      paradas: paradasDaOferta(antes),
+      vagas_total: antes.vagas_total,
+      valor: antes.valor,
+    })
+
+    expect([200, 201]).toContain(resposta.status)
+    const depois = await contexto.db.get('SELECT * FROM ofertas WHERE id = ?', [ofertaId])
+    expect(depois.atualizado_em).toBe(antes.atualizado_em)
+
+    const eventosDepois = await eventosDaOferta(ofertaId)
+    expect(eventosDepois).toHaveLength(eventosAntes.length)
+    expect(eventosDepois.filter((evento) => evento.tipo_evento === TIPOS_EVENTO.OFERTA_EDITADA)).toHaveLength(0)
+  })
+
   it('[RF-009/RN-003] com reserva confirmada, paradas e valor (inclusive zero) podem ser ajustados', async () => {
     const motorista = await criarUsuario()
     const passageiro = await criarUsuario({

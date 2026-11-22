@@ -124,8 +124,11 @@ describe('Integração de veículos (RF-006, RF-007, RNF-004, RN-002, RN-008, CA
   async function criarReserva(oferta, passageiro, status = 'CONFIRMADA') {
     const resultado = await contexto.db.run(
       `INSERT INTO reservas (oferta_id, passageiro_id, status) VALUES (?, ?, ?)`,
-      [oferta.id, passageiro.id, status],
+      [oferta.id, passageiro.id, 'CONFIRMADA'],
     )
+    if (status !== 'CONFIRMADA') {
+      await contexto.db.run('UPDATE reservas SET status = ? WHERE id = ?', [status, resultado.lastID])
+    }
     return contexto.db.get('SELECT * FROM reservas WHERE id = ?', [resultado.lastID])
   }
 
