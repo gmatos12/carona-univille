@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api.js'
+import { avaliarOferta, mensagemErroAvaliacao } from '../services/avaliacaoService.js'
 import {
   cancelarOferta as cancelarOfertaApi,
   cancelarReserva as cancelarReservaApi,
@@ -93,6 +94,7 @@ export function MinhasViagensPage() {
   const [erro, setErro] = useState('')
   const [feedbacks, setFeedbacks] = useState({})
   const [processando, setProcessando] = useState({})
+  const [notas, setNotas] = useState({})
 
   useEffect(() => {
     let ativo = true
@@ -157,30 +159,33 @@ export function MinhasViagensPage() {
   async function cancelarOferta(item) {
     const ofertaId = identificadorOferta(item)
     if (!ofertaId) return
-
     const chave = chaveItem('oferta', ofertaId)
     definirProcessando(chave, true)
-
     try {
       const cancelamento = await cancelarOfertaApi(ofertaId)
       setViagens((anterior) => ({
         ...anterior,
         ofertas: anterior.ofertas.map((oferta) => (
-          identificadorOferta(oferta) === ofertaId
-            ? { ...oferta, estado: 'CANCELADA', situacao: 'CANCELADA' }
-            : oferta
+          identificadorOferta(oferta) === ofertaId ? { ...oferta, estado: 'CANCELADA', situacao: 'CANCELADA' } : oferta
         )),
       }))
       definirFeedback(chave, 'sucesso', mensagemSucessoCancelamentoOferta(cancelamento))
     } catch (error) {
-      definirFeedback(
-        chave,
-        'erro',
-        mensagemErroCancelamento(error, 'Não foi possível cancelar a oferta.'),
-      )
-    } finally {
-      definirProcessando(chave, false)
-    }
+      definirFeedback(chave, 'erro', mensagemErroCancelamento(error, 'Não foi possível cancelar a oferta.'))
+    } finally { definirProcessando(chave, false) }
+  }
+
+  async function avaliar(item, avaliadoId) {
+    const ofertaId = identificadorOferta(item)
+    if (!ofertaId || !avaliadoId) return
+    const chave = chaveItem('avaliar', ofertaId)
+    definirProcessando(chave, true)
+    try {
+      await avaliarOferta(ofertaId, { avaliadoId, nota: Number(notas[chave] ?? 5) })
+      definirFeedback(chave, 'sucesso', 'Avaliação registrada.')
+    } catch (error) {
+      definirFeedback(chave, 'erro', mensagemErroAvaliacao(error))
+    } finally { definirProcessando(chave, false) }
   }
 
   return (
@@ -211,6 +216,10 @@ export function MinhasViagensPage() {
                   const dataHora = dataHoraDaViagem(reserva)
                   const podeCancelar = ativa && podeCancelarPassageiro(dataHora)
 
+                  const oferta = ofertaDaViagem(reserva)
+                  const concluida = String(oferta?.estado ?? '').toUpperCase() === 'CONCLUIDA'
+                  const motoristaId = oferta?.motorista_id ?? oferta?.motoristaId
+                  const chaveAvaliar = chaveItem('avaliar', identificadorOferta(reserva))
                   return (
                     <li key={chave}>
                       <strong>{rotuloPercurso(reserva)}</strong>
@@ -218,15 +227,18 @@ export function MinhasViagensPage() {
                       <p>{mensagemPrazoCancelamento(dataHora)}</p>
                       <Feedback feedback={feedbacks[chave]} />
                       {ativa ? (
-                        <button
-                          type="button"
-                          onClick={() => cancelarReserva(reserva)}
-                          disabled={!podeCancelar || Boolean(processando[chave])}
-                        >
+                        <button type="button" onClick={() => cancelarReserva(reserva)} disabled={!podeCancelar || Boolean(processando[chave])}>
                           {processando[chave] ? 'Cancelando reserva...' : 'Cancelar reserva'}
                         </button>
                       ) : (
-                        <p role="status">Reserva cancelada.</p>
+                        <p role="status">Reserva {statusDaReserva(reserva).toLowerCase()}.</p>
+                      )}
+                      {concluida && motoristaId && (
+                        <div>
+                          <label>Nota <select value={notas[chaveAvaliar] ?? '5'} onChange={(e) => setNotas((a) => ({ ...a, [chaveAvaliar]: e.target.value }))}>{[1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}</select></label>
+                          <button type="button" disabled={Boolean(processando[chaveAvaliar])} onClick={() => avaliar(reserva, motoristaId)}>{processando[chaveAvaliar] ? 'Enviando...' : 'Avaliar motorista'}</button>
+                          <Feedback feedback={feedbacks[chaveAvaliar]} />
+                        </div>
                       )}
                     </li>
                   )
@@ -247,20 +259,27 @@ export function MinhasViagensPage() {
                   const cancelada = statusDaOferta(oferta) === 'CANCELADA'
                   const linkId = ofertaId ?? ofertaDaViagem(oferta)?.id
 
+                  const concluida = statusDaOferta(oferta) === 'CONCLUIDA'
+                  const passageiroId = oferta?.reserva?.passageiro_id ?? oferta?.reservas?.[0]?.passageiro_id ?? oferta?.passageiro_id
+                  const chaveAvaliar = chaveItem('avaliar', ofertaId)
                   return (
                     <li key={chave}>
                       <strong>{rotuloPercurso(oferta)}</strong>
                       <p>{rotuloDataHora(dataHoraDaViagem(oferta))}</p>
                       <p>{mensagemPenalidadeMotorista(oferta.reservas_confirmadas)}</p>
+                      <p>Reputação do motorista: {oferta?.motorista?.media_avaliacoes ?? 'Sem avaliações'}</p>
                       <Feedback feedback={feedbacks[chave]} />
-                      <button
-                        type="button"
-                        onClick={() => cancelarOferta(oferta)}
-                        disabled={cancelada || Boolean(processando[chave])}
-                      >
+                      <button type="button" onClick={() => cancelarOferta(oferta)} disabled={cancelada || Boolean(processando[chave])}>
                         {processando[chave] ? 'Cancelando oferta...' : 'Cancelar oferta'}
                       </button>
                       {cancelada && <p role="status">Oferta cancelada.</p>}
+                      {concluida && passageiroId && (
+                        <div>
+                          <label>Nota <select value={notas[chaveAvaliar] ?? '5'} onChange={(e) => setNotas((a) => ({ ...a, [chaveAvaliar]: e.target.value }))}>{[1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}</select></label>
+                          <button type="button" disabled={Boolean(processando[chaveAvaliar])} onClick={() => avaliar(oferta, passageiroId)}>{processando[chaveAvaliar] ? 'Enviando...' : 'Avaliar passageiro'}</button>
+                          <Feedback feedback={feedbacks[chaveAvaliar]} />
+                        </div>
+                      )}
                       {linkId && <Link to={`/ofertas/${linkId}`}>Ver detalhes</Link>}
                     </li>
                   )

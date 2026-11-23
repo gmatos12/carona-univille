@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
+  avaliarOferta,
+  concluirOferta,
+  informarAusenciaMotorista,
+  iniciarOferta,
+  mensagemErroAvaliacao,
+  registrarNoShowReserva,
+} from '../services/avaliacaoService.js'
+import {
   cancelarOferta as cancelarOfertaApi,
   cancelarReserva as cancelarReservaApi,
   mensagemErroCancelamento,
@@ -75,6 +83,11 @@ export function OfertaDetalhePage() {
   const [cancelandoReserva, setCancelandoReserva] = useState(false)
   const [cancelandoOferta, setCancelandoOferta] = useState(false)
   const [feedbackCancelamento, setFeedbackCancelamento] = useState(null)
+  const [executando, setExecutando] = useState('')
+  const [feedbackExecucao, setFeedbackExecucao] = useState(null)
+  const [notaAvaliacao, setNotaAvaliacao] = useState('5')
+  const [avaliando, setAvaliando] = useState(false)
+  const [feedbackAvaliacao, setFeedbackAvaliacao] = useState(null)
 
   useEffect(() => {
     let ativo = true
@@ -171,23 +184,39 @@ export function OfertaDetalhePage() {
   async function cancelarMinhaOferta() {
     setCancelandoOferta(true)
     setFeedbackCancelamento(null)
-
     try {
       const cancelamento = await cancelarOfertaApi(id)
-      setFeedbackCancelamento({
-        tipo: 'sucesso',
-        mensagem: mensagemSucessoCancelamentoOferta(cancelamento),
-      })
+      setFeedbackCancelamento({ tipo: 'sucesso', mensagem: mensagemSucessoCancelamentoOferta(cancelamento) })
       await recarregarOferta({ atualizarReserva: false })
     } catch (error) {
-      setFeedbackCancelamento({
-        tipo: 'erro',
-        mensagem: mensagemErroCancelamento(error, 'Não foi possível cancelar a oferta.'),
-      })
+      setFeedbackCancelamento({ tipo: 'erro', mensagem: mensagemErroCancelamento(error, 'Não foi possível cancelar a oferta.') })
       await recarregarOferta({ atualizarReserva: false })
-    } finally {
-      setCancelandoOferta(false)
-    }
+    } finally { setCancelandoOferta(false) }
+  }
+
+  async function acaoExecucao(tipo, fn, sucesso) {
+    setExecutando(tipo)
+    setFeedbackExecucao(null)
+    try {
+      await fn()
+      setFeedbackExecucao({ tipo: 'sucesso', mensagem: sucesso })
+      await recarregarOferta()
+    } catch (error) {
+      setFeedbackExecucao({ tipo: 'erro', mensagem: mensagemErroAvaliacao(error, 'Não foi possível concluir a ação.') })
+      await recarregarOferta()
+    } finally { setExecutando('') }
+  }
+
+  async function enviarAvaliacao(avaliadoId) {
+    setAvaliando(true)
+    setFeedbackAvaliacao(null)
+    try {
+      await avaliarOferta(id, { avaliadoId, nota: Number(notaAvaliacao) })
+      setFeedbackAvaliacao({ tipo: 'sucesso', mensagem: 'Avaliação registrada.' })
+      await recarregarOferta()
+    } catch (error) {
+      setFeedbackAvaliacao({ tipo: 'erro', mensagem: mensagemErroAvaliacao(error) })
+    } finally { setAvaliando(false) }
   }
 
   if (carregando) return <section className="oferta-detalhe-page"><p>Carregando oferta...</p></section>
@@ -229,12 +258,14 @@ export function OfertaDetalhePage() {
     ? estado === 'ABERTA' && antesDaPartida && !lotada
     : Boolean(oferta.aceita_reservas)
   const podeReservar = aceitaReservas && !lotada && !reservaConfirmada && !reservando
-  const disponibilidade = mensagemDisponibilidade({
-    confirmada: reservaConfirmada,
-    lotada,
-    antesDaPartida,
-    aberta: estado === 'ABERTA',
-  })
+  const disponibilidade = mensagemDisponibilidade({ confirmada: reservaConfirmada, lotada, antesDaPartida, aberta: estado === 'ABERTA' })
+  const partidaAtingida = !Number.isNaN(partida.getTime()) && partida.getTime() <= Date.now()
+  const podeIniciar = ehMotorista && estado === 'ABERTA' && partidaAtingida
+  const podeConcluir = ehMotorista && estado === 'EM_ANDAMENTO'
+  const podeNoShow = ehMotorista && partidaAtingida && reservaIdAtiva && reservaAtivaConfirmada
+  const podeAusencia = !ehMotorista && reservaAtivaConfirmada && partidaAtingida && !ofertaCancelada
+  const podeAvaliar = estado === 'CONCLUIDA' && !['NO_SHOW'].includes(String(reservaAtiva?.status ?? '').toUpperCase())
+  const avaliadoId = ehMotorista ? (reservaAtiva?.passageiro_id ?? reservaAtiva?.passageiroId ?? null) : oferta.motorista_id
 
   return (
     <section className="oferta-detalhe-page">
@@ -338,14 +369,62 @@ export function OfertaDetalhePage() {
         <section aria-labelledby="detalhe-cancelamento-oferta">
           <h2 id="detalhe-cancelamento-oferta">Cancelar oferta</h2>
           <p>{mensagemPenalidadeMotorista(oferta.reservas_confirmadas)}</p>
-          <button
-            type="button"
-            onClick={cancelarMinhaOferta}
-            disabled={!podeCancelarOferta || cancelandoOferta}
-          >
+          <button type="button" onClick={cancelarMinhaOferta} disabled={!podeCancelarOferta || cancelandoOferta}>
             {cancelandoOferta ? 'Cancelando oferta...' : 'Cancelar oferta'}
           </button>
           {ofertaCancelada && <p role="status">Esta oferta já foi cancelada.</p>}
+        </section>
+      )}
+
+      {(ehMotorista || reservaAtivaConfirmada) && (
+        <section aria-labelledby="detalhe-execucao">
+          <h2 id="detalhe-execucao">Execução da viagem</h2>
+          {feedbackExecucao && (
+            <p className={`auth-message auth-message-${feedbackExecucao.tipo === 'sucesso' ? 'success' : 'error'}`} role={feedbackExecucao.tipo === 'sucesso' ? 'status' : 'alert'}>
+              {feedbackExecucao.mensagem}
+            </p>
+          )}
+          {ehMotorista && (
+            <div className="form-actions">
+              <button type="button" disabled={!podeIniciar || !!executando} onClick={() => acaoExecucao('iniciar', () => iniciarOferta(id), 'Viagem iniciada.')}>
+                {executando === 'iniciar' ? 'Iniciando...' : 'Iniciar viagem'}
+              </button>
+              <button type="button" disabled={!podeConcluir || !!executando} onClick={() => acaoExecucao('concluir', () => concluirOferta(id), 'Viagem concluída.')}>
+                {executando === 'concluir' ? 'Concluindo...' : 'Concluir viagem'}
+              </button>
+              {reservaIdAtiva && (
+                <button type="button" disabled={!podeNoShow || !!executando} onClick={() => acaoExecucao('noshow', () => registrarNoShowReserva(reservaIdAtiva), 'No-show registrado.')}>
+                  {executando === 'noshow' ? 'Registrando...' : 'Registrar no-show do passageiro'}
+                </button>
+              )}
+            </div>
+          )}
+          {!ehMotorista && reservaAtivaConfirmada && (
+            <button type="button" disabled={!podeAusencia || !!executando} onClick={() => acaoExecucao('ausencia', () => informarAusenciaMotorista(id), 'Ausência do motorista registrada.')}>
+              {executando === 'ausencia' ? 'Registrando...' : 'Informar ausência do motorista'}
+            </button>
+          )}
+        </section>
+      )}
+
+      {podeAvaliar && avaliadoId && (
+        <section aria-labelledby="detalhe-avaliacao">
+          <h2 id="detalhe-avaliacao">Avaliação</h2>
+          <p>Avalie com nota de 1 a 5. Sem comentários.</p>
+          {feedbackAvaliacao && (
+            <p className={`auth-message auth-message-${feedbackAvaliacao.tipo === 'sucesso' ? 'success' : 'error'}`} role={feedbackAvaliacao.tipo === 'sucesso' ? 'status' : 'alert'}>
+              {feedbackAvaliacao.mensagem}
+            </p>
+          )}
+          <label>
+            Nota
+            <select value={notaAvaliacao} onChange={(e) => setNotaAvaliacao(e.target.value)}>
+              {[1, 2, 3, 4, 5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
+            </select>
+          </label>
+          <button type="button" disabled={avaliando} onClick={() => enviarAvaliacao(avaliadoId)}>
+            {avaliando ? 'Enviando...' : 'Enviar avaliação'}
+          </button>
         </section>
       )}
 
