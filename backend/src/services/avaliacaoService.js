@@ -74,6 +74,18 @@ export class AvaliacaoService {
     if (connection) return withImmediateTransaction(connection, executar)
     return withImmediateTransaction(executar)
   }
+
+  async mediaAvaliacoes(avaliadoId, connection) {
+    const id = idPositivo(avaliadoId, 'avaliado_id')
+    const conn = connection || (await import('../db/connection.js')).getConnection()
+    const row = await conn.get(
+      'SELECT AVG(nota) AS media, COUNT(*) AS total FROM avaliacoes WHERE avaliado_id = ?',
+      [id],
+    )
+    const total = Number(row?.total ?? 0)
+    if (total === 0) return 'Sem avaliações'
+    return Number(Number(row.media).toFixed(1))
+  }
 }
 
 export const avaliacaoService = new AvaliacaoService()
