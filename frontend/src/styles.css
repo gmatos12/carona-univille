@@ -423,9 +423,51 @@ dd {
 .perfil-page,
 .busca-page,
 .oferta-form-page,
-.oferta-detalhe-page {
+.oferta-detalhe-page,
+.minhas-viagens-page,
+.recorrencias-page {
   max-width: 960px;
   margin: 0 auto;
+}
+
+.minhas-viagens-filtros {
+  max-width: 320px;
+}
+
+.recorrencias-resultados {
+  margin-top: 1.75rem;
+}
+
+.recorrencia-dias {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: 0.75rem;
+  background: #f9fbfd;
+}
+
+.recorrencia-dias legend {
+  padding: 0 0.35rem;
+  font-weight: 800;
+}
+
+.recorrencia-dias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem 0.75rem;
+}
+
+.recorrencia-dias-grid label {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.recorrencia-dias-grid input {
+  width: auto;
+  min-height: auto;
 }
 
 .auth-card,

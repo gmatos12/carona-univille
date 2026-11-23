@@ -228,7 +228,7 @@ description: "Task list for feature implementation"
 - [X] T075 [US6] Implementar rotina de garantia da janela de 15 dias na inicialização e por intervalo interno, com idempotência por recorrência+data/hora, em `backend/src/services/recorrenciaScheduler.js` e `backend/src/server.js`. Requisitos: RF-020, RNF-003, RN-007, CA-007
 - [X] T076 [US6] Implementar controllers e rotas `POST /api/recorrencias`, `PUT /api/recorrencias/:id` e `POST /api/recorrencias/:id/interromper`, montando-as em `backend/src/controllers/recorrenciaController.js`, `backend/src/routes/recorrenciaRoutes.js` e `backend/src/app.js`. Requisitos: RF-020, RF-021, CA-007
 - [X] T077 [US6] Implementar serviço, controller e rota `GET /api/minhas-viagens?tipo=oferecidas|reservadas|concluidas|canceladas` com categorias, situações derivadas e visibilidade em `backend/src/services/minhasViagensService.js`, `backend/src/controllers/minhasViagensController.js`, `backend/src/routes/minhasViagensRoutes.js` e `backend/src/app.js`. Requisitos: RF-022, RF-023, RN-009, CA-008
-- [ ] T078 [US6] Criar páginas de recorrências e "Minhas viagens" com filtros por categoria e cliente API em `frontend/src/pages/RecorrenciasPage.jsx`, `frontend/src/pages/MinhasViagensPage.jsx` e `frontend/src/services/recorrenciaService.js`. Requisitos: RF-020, RF-021, RF-023, RNF-001, CA-007, CA-008
+- [X] T078 [US6] Criar páginas de recorrências e "Minhas viagens" com filtros por categoria e cliente API em `frontend/src/pages/RecorrenciasPage.jsx`, `frontend/src/pages/MinhasViagensPage.jsx` e `frontend/src/services/recorrenciaService.js`. Requisitos: RF-020, RF-021, RF-023, RNF-001, CA-007, CA-008
 
 **Checkpoint**: US6 funcional e independente.
 
