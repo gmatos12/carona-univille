@@ -33,14 +33,14 @@ export function calcularOcorrenciasJanela(recorrencia, agora = new Date(), janel
   const dias = Array.isArray(recorrencia?.dias_semana) ? recorrencia.dias_semana.map(Number) : []
   const { hora, minuto } = parseHorario(recorrencia?.horario)
   const inicio = inicioDoDiaUtc(base)
-  const limite = new Date(inicio.getTime() + janelaDias * DIA_MS)
+  const limite = base.getTime() + janelaDias * DIA_MS
   const ocorrencias = []
-  for (let i = 0; i <= janelaDias; i += 1) {
+  for (let i = 0; i <= janelaDias + 1; i += 1) {
     const dia = new Date(inicio.getTime() + i * DIA_MS)
     if (!dias.includes(dia.getUTCDay())) continue
     const dataHora = new Date(Date.UTC(dia.getUTCFullYear(), dia.getUTCMonth(), dia.getUTCDate(), hora, minuto, 0, 0))
     if (dataHora.getTime() < base.getTime()) continue
-    if (dataHora.getTime() > limite.getTime() + DIA_MS - 1) continue
+    if (dataHora.getTime() > limite) continue
     ocorrencias.push(dataHora.toISOString())
   }
   return ocorrencias
@@ -58,18 +58,22 @@ export class RecorrenciaService {
   }
 
   async _validarVeiculo(motoristaId, veiculoId, vagas, connection) {
-    const veiculo = await this.veiculos.buscarPorId(veiculoId, connection)
+    const veiculo = await this.veiculos.buscarPorId(veiculoId, motoristaId, connection)
     if (!veiculo) throw new NotFoundError('Veículo não encontrado')
-    if (Number(veiculo.usuario_id) !== Number(motoristaId)) throw new ForbiddenError('Veículo não pertence ao motorista')
     if (Number(vagas) > Number(veiculo.capacidade_passageiros)) {
       throw new ConflictError('vagas excedem a capacidade do veículo')
     }
     return veiculo
   }
 
+  async _run(connection, fn) {
+    if (connection) return fn(connection) // assume caller manages transaction
+    return withImmediateTransaction(fn)
+  }
+
   async criar(motoristaId, dados = {}, connection) {
     const motorista = idPositivo(motoristaId, 'motorista_id')
-    const executar = async (tx) => {
+    return this._run(connection, async (tx) => {
       try {
         const payload = { ...dados, motorista_id: motorista, ativa: true, janela_dias: JANELA_DIAS }
         await this._validarVeiculo(motorista, payload.veiculo_id ?? payload.veiculoId, payload.vagas ?? payload.vagas_total, tx)
@@ -77,15 +81,13 @@ export class RecorrenciaService {
         const geracao = await this.gerarJanela(recorrencia.id, { agora: new Date(), connection: tx })
         return { recorrencia, ...geracao }
       } catch (error) { traduzirErro(error) }
-    }
-    if (connection) return withImmediateTransaction(connection, executar)
-    return withImmediateTransaction(executar)
+    })
   }
 
   async alterar(id, motoristaId, dados = {}, connection) {
     const recId = idPositivo(id, 'recorrencia_id')
     const motorista = idPositivo(motoristaId, 'motorista_id')
-    const executar = async (tx) => {
+    return this._run(connection, async (tx) => {
       try {
         const atual = await this.recorrencias.buscarPorId(recId, tx)
         if (!atual) throw new NotFoundError('Recorrência não encontrada')
@@ -96,29 +98,25 @@ export class RecorrenciaService {
         await this.gerarJanela(recId, { agora: new Date(), connection: tx })
         return atualizada
       } catch (error) { traduzirErro(error) }
-    }
-    if (connection) return withImmediateTransaction(connection, executar)
-    return withImmediateTransaction(executar)
+    })
   }
 
   async interromper(id, motoristaId, connection) {
     const recId = idPositivo(id, 'recorrencia_id')
     const motorista = idPositivo(motoristaId, 'motorista_id')
-    const executar = async (tx) => {
+    return this._run(connection, async (tx) => {
       try {
         const atual = await this.recorrencias.buscarPorId(recId, tx)
         if (!atual) throw new NotFoundError('Recorrência não encontrada')
         if (Number(atual.motorista_id) !== motorista) throw new ForbiddenError('Sem permissão para interromper recorrência')
         return await this.recorrencias.interromper(recId, tx)
       } catch (error) { traduzirErro(error) }
-    }
-    if (connection) return withImmediateTransaction(connection, executar)
-    return withImmediateTransaction(executar)
+    })
   }
 
   async gerarJanela(recorrenciaId, { agora = new Date(), connection } = {}) {
     const recId = idPositivo(recorrenciaId, 'recorrencia_id')
-    const executar = async (tx) => {
+    return this._run(connection, async (tx) => {
       try {
         const recorrencia = await this.recorrencias.buscarPorId(recId, tx)
         if (!recorrencia) throw new NotFoundError('Recorrência não encontrada')
@@ -147,9 +145,7 @@ export class RecorrenciaService {
         }
         return { recorrencia, geradas, existentes, ofertas }
       } catch (error) { traduzirErro(error) }
-    }
-    if (connection) return withImmediateTransaction(connection, executar)
-    return withImmediateTransaction(executar)
+    })
   }
 
   async garantirJanela({ agora = new Date(), connection } = {}) {
