@@ -198,6 +198,32 @@ describe('Integração de execução da viagem (RF-017, RF-022, RNF-004, RN-009,
     expect(salvaConclusao.concluida_em).not.toBeNull()
   })
 
+  it('[RNF-002/RN-008] somente o motorista inicia e conclui a viagem', async () => {
+    const motorista = await criarUsuario(0)
+    const terceiro = await criarUsuario(2)
+    const veiculo = await criarVeiculo(motorista)
+    const oferta = await criarOferta(motorista, veiculo, { data_hora_saida: isoDeslocado(-5) })
+
+    const inicioTerceiro = await contexto.request
+      .post(`/api/ofertas/${oferta.id}/iniciar`)
+      .set('Authorization', auth(terceiro))
+      .send({})
+    const conclusaoTerceiro = await contexto.request
+      .post(`/api/ofertas/${oferta.id}/concluir`)
+      .set('Authorization', auth(terceiro))
+      .send({})
+
+    expect([401, 403, 404]).toContain(inicioTerceiro.status)
+    expect([401, 403, 404]).toContain(conclusaoTerceiro.status)
+    expect((await contexto.db.get('SELECT estado FROM ofertas WHERE id = ?', [oferta.id])).estado).toBe('ABERTA')
+
+    const inicioMotorista = await contexto.request
+      .post(`/api/ofertas/${oferta.id}/iniciar`)
+      .set('Authorization', auth(motorista))
+      .send({})
+    expect(inicioMotorista.status).toBe(200)
+  })
+
   it('[RF-022/RN-009/CA-008] após o horário previsto, oferta sai da busca, fica visível só a participantes e não aceita novas reservas', async () => {
     const motorista = await criarUsuario(0)
     const passageiro = await criarUsuario(1)

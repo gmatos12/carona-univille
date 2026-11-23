@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken'
+import { usuarioRepository } from '../repositories/usuarioRepository.js'
+import { asyncHandler, ForbiddenError } from './errorHandler.js'
 
 const JWT_EXPIRATION = '8h'
 const BEARER_PATTERN = /^Bearer\s+(.+)$/i
@@ -98,6 +100,20 @@ function authenticate(req, res, next) {
   }
 }
 
+const requireContaAtiva = asyncHandler(async (req, res, next) => {
+  const usuarioId = Number(req.user?.id)
+  if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+    throw new ForbiddenError('Conta inválida')
+  }
+
+  const usuario = await usuarioRepository.buscarPorId(usuarioId)
+  if (!usuario || Number(usuario.conta_ativa) !== 1) {
+    throw new ForbiddenError('Conta inativa')
+  }
+
+  return next()
+})
+
 const auth = authenticate
 const requireAuth = authenticate
 const authenticateToken = authenticate
@@ -112,6 +128,7 @@ export {
   getExpiresIn,
   getJwtSecret,
   requireAuth,
+  requireContaAtiva,
   signToken,
   verifyToken,
 }
@@ -121,6 +138,7 @@ export default {
   authenticateToken,
   auth,
   requireAuth,
+  requireContaAtiva,
   signToken,
   verifyToken,
 }

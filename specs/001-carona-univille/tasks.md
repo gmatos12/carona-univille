@@ -244,14 +244,14 @@ description: "Task list for feature implementation"
 
 > Escrever os testes primeiro e confirmar que falham antes da implementação.
 
-- [ ] T079 [P] [US7] Teste de integração de exclusão de conta cobrando bloqueio de novas ações, cancelamentos futuros sem penalidades, natureza distinta no histórico e "Dados anonimizados na exclusão: campos pessoais removidos/substituídos preservando referências necessárias ao histórico/integridade." em `backend/tests/integration/exclusaoConta.test.js`. Requisitos: RF-024, RF-025, RNF-004, RN-005, RN-009, CA-009
+- [X] T079 [P] [US7] Teste de integração de exclusão de conta cobrando bloqueio de novas ações, cancelamentos futuros sem penalidades, natureza distinta no histórico e "Dados anonimizados na exclusão: campos pessoais removidos/substituídos preservando referências necessárias ao histórico/integridade." em `backend/tests/integration/exclusaoConta.test.js`. Requisitos: RF-024, RF-025, RNF-004, RN-005, RN-009, CA-009
 
 ### Implementation for User Story 7
 
-- [ ] T080 [P] [US7] Implementar atualizações no repositório de usuário para anonimizar dados e persistir "**conta_ativa** (bool; false após exclusão/anonimização lógica conforme necessidade)" mantendo FK e histórico íntegros em `backend/src/repositories/usuarioRepository.js`. Requisitos: RF-024, RNF-002, RNF-003, CA-009
-- [ ] T081 [US7] Implementar serviço de exclusão que cancela ofertas/reservas futuras com natureza `CANCELAMENTO_EXCLUSAO_CONTA`, aplica "Sem bloqueio automático; cancelamentos por exclusão de conta não geram penalidade.", anonimiza dados e registra histórico em `backend/src/services/exclusaoContaService.js`. Requisitos: RF-024, RF-025, RN-005, RN-009, CA-009
-- [ ] T082 [US7] Completar `DELETE /api/me` e reforçar middleware de autenticação para bloquear criação de ofertas/reservas por conta inativa em `backend/src/controllers/usuarioController.js`, `backend/src/routes/usuarioRoutes.js` e `backend/src/middlewares/auth.js`. Requisitos: RF-024, RNF-002, CA-009
-- [ ] T083 [US7] Integrar fluxo de exclusão com confirmação e estados pós-exclusão no frontend em `frontend/src/pages/PerfilPage.jsx` e `frontend/src/services/usuarioService.js`. Requisitos: RF-024, RNF-001, CA-009
+- [X] T080 [P] [US7] Implementar atualizações no repositório de usuário para anonimizar dados e persistir "**conta_ativa** (bool; false após exclusão/anonimização lógica conforme necessidade)" mantendo FK e histórico íntegros em `backend/src/repositories/usuarioRepository.js`. Requisitos: RF-024, RNF-002, RNF-003, CA-009
+- [X] T081 [US7] Implementar serviço de exclusão que cancela ofertas/reservas futuras com natureza `CANCELAMENTO_EXCLUSAO_CONTA`, aplica "Sem bloqueio automático; cancelamentos por exclusão de conta não geram penalidade.", anonimiza dados e registra histórico em `backend/src/services/exclusaoContaService.js`. Requisitos: RF-024, RF-025, RN-005, RN-009, CA-009
+- [X] T082 [US7] Completar `DELETE /api/me` e reforçar middleware de autenticação para bloquear criação de ofertas/reservas por conta inativa em `backend/src/controllers/usuarioController.js`, `backend/src/routes/usuarioRoutes.js` e `backend/src/middlewares/auth.js`. Requisitos: RF-024, RNF-002, CA-009
+- [X] T083 [US7] Integrar fluxo de exclusão com confirmação e estados pós-exclusão no frontend em `frontend/src/pages/PerfilPage.jsx` e `frontend/src/services/usuarioService.js`. Requisitos: RF-024, RNF-001, CA-009
 
 **Checkpoint**: US7 funcional e independente, com histórico e integridade preservados.
 
@@ -261,7 +261,7 @@ description: "Task list for feature implementation"
 
 **Purpose**: Segurança, cobertura, documentação, rastreabilidade e validação final ponta a ponta.
 
-- [ ] T084 [P] Revisar autorização e visibilidade em todos os endpoints, garantindo "Placa visível apenas para o dono do veículo e passageiros com reserva confirmada na viagem." e nenhuma exposição de matrícula/e-mail/telefone/penalidades em `backend/src/middlewares/authorize.js`, `backend/src/services/usuarioService.js`, `backend/src/services/veiculoService.js` e `backend/src/services/ofertaService.js`. Requisitos: RF-004, RF-007, RNF-002, RN-008, CA-002
+- [X] T084 [P] Revisar autorização e visibilidade em todos os endpoints, garantindo "Placa visível apenas para o dono do veículo e passageiros com reserva confirmada na viagem." e nenhuma exposição de matrícula/e-mail/telefone/penalidades em `backend/src/middlewares/authorize.js`, `backend/src/services/usuarioService.js`, `backend/src/services/veiculoService.js` e `backend/src/services/ofertaService.js`. Requisitos: RF-004, RF-007, RNF-002, RN-008, CA-002
 - [ ] T085 [P] Revisar validação, sanitização e mensagens de erro em `backend/src/middlewares/validate.js`, `backend/src/middlewares/errorHandler.js`, `backend/src/controllers/authController.js`, `backend/src/controllers/usuarioController.js`, `backend/src/controllers/ofertaController.js` e `backend/src/controllers/reservaController.js`. Requisitos: RNF-001, RNF-002, RNF-005, CA-002
 - [ ] T086 Executar suíte completa e gerar relatório de cobertura Vitest com resumo no terminal e HTML em `backend/coverage/`, confirmando meta ≥ 80% em `backend/package.json`. Requisitos: RNF-004, RNF-006
 - [ ] T087 Atualizar `README.md` com seção inicial de resultados de testes/cobertura contendo percentuais de linhas/funções/branches/statements, total de testes e comando para gerar/atualizar o relatório em `README.md`. Requisitos: RNF-004, RNF-005, RNF-006

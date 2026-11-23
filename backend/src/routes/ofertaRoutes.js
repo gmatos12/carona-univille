@@ -1,6 +1,6 @@
 ﻿import { Router } from 'express'
 import { cancelarOferta } from '../controllers/cancelamentoController.js'
-import { authenticate } from '../middlewares/auth.js'
+import { authenticate, requireContaAtiva } from '../middlewares/auth.js'
 import { avaliar } from '../controllers/avaliacaoController.js'
 import { concluir, iniciar } from '../controllers/execucaoController.js'
 import { registrarAusenciaMotorista } from '../controllers/noShowController.js'
@@ -15,7 +15,7 @@ const router = Router()
 
 router.use(authenticate)
 
-router.post('/', criar)
+router.post('/', requireContaAtiva, criar)
 router.get('/busca', buscar)
 router.get('/:id', detalhar)
 router.put('/:id', atualizar)

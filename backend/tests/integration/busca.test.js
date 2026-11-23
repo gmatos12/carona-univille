@@ -272,6 +272,35 @@ describe('Integração de busca de ofertas (RF-011, RF-012, RF-022, RNF-004, RN-
     ).toBe(true)
   })
 
+  it('[RF-007/RNF-002/RN-008/CA-002] busca não expõe placa nem dados sensíveis do motorista', async () => {
+    const motorista = await criarUsuario({
+      nome_completo: 'Motorista Privacidade',
+      telefone: '(47) 99999-9876',
+    })
+    const passageiro = await criarUsuario({
+      matricula: MATRICULA_PASSAGEIRO,
+      email_institucional: 'passageiro.privacidade@univille.br',
+    })
+    const veiculo = await criarVeiculo(motorista, { placa: 'PLACA_SECRETA' })
+    await criarOferta(motorista, veiculo)
+    await contexto.db.run(
+      `INSERT INTO penalidades (usuario_id, pontos, motivo, tipo_evento, referencia)
+       VALUES (?, ?, ?, ?, ?)`,
+      [motorista.id, 1, 'PENALIDADE_SECRETA', 'CANCELAMENTO_MOTORISTA', 'oferta:1'],
+    )
+
+    const resposta = await buscar(passageiro)
+
+    expect(resposta.status).toBe(200)
+    const texto = JSON.stringify(resposta.body)
+    expect(texto).not.toContain(veiculo.placa)
+    expect(texto).not.toContain(motorista.matricula)
+    expect(texto).not.toContain(motorista.email_institucional)
+    expect(texto).not.toContain(motorista.telefone)
+    expect(texto).not.toContain('PENALIDADE_SECRETA')
+    expect(Object.keys(ofertaDoResultado(resultadosDaBusca(resposta.body)[0]).motorista ?? {})).not.toContain('penalidades')
+  })
+
   it('[RF-012/CA-003] oferta lotada permanece na busca com situação "Lotada"', async () => {
     const motorista = await criarUsuario()
     const passageiro = await criarUsuario({

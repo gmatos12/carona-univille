@@ -4,6 +4,7 @@ import { uploadFotoPerfil } from '../middlewares/upload.js'
 import {
   adicionarFoto,
   atualizar,
+  excluir,
   perfil,
   perfilPublico,
   removerFoto,
@@ -17,6 +18,7 @@ router.get('/me', authenticate, perfil)
 router.put('/me', authenticate, atualizar)
 router.post('/me/foto', authenticate, uploadFotoPerfil, adicionarFoto)
 router.delete('/me/foto', authenticate, removerFoto)
+router.delete('/me', authenticate, excluir)
 
 export { router, router as routes }
 export default router

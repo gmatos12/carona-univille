@@ -1,4 +1,5 @@
 import { asyncHandler } from '../middlewares/errorHandler.js'
+import { exclusaoContaService } from '../services/exclusaoContaService.js'
 import { UploadService } from '../services/uploadService.js'
 import { usuarioService } from '../services/usuarioService.js'
 
@@ -34,6 +35,11 @@ const perfilPublico = asyncHandler(async (req, res) => {
   return res.status(200).json({ perfil: dados })
 })
 
-export { perfil, atualizar, adicionarFoto, removerFoto, perfilPublico }
+const excluir = asyncHandler(async (req, res) => {
+  await exclusaoContaService.excluir(req.user.id)
+  return res.status(204).send()
+})
 
-export default { perfil, atualizar, adicionarFoto, removerFoto, perfilPublico }
+export { perfil, atualizar, adicionarFoto, removerFoto, perfilPublico, excluir }
+
+export default { perfil, atualizar, adicionarFoto, removerFoto, perfilPublico, excluir }

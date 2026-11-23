@@ -308,4 +308,26 @@ describe('Integração de cancelamentos (RF-015, RF-016, RF-025, RNF-004, RN-005
     const eventoPenalidade = await eventos('penalidade', registradas[0].id)
     expect(eventoPenalidade.some((evento) => evento.tipo_evento === 'PENALIDADE_REGISTRADA')).toBe(true)
   })
+
+  it('[RNF-002/RN-008] terceiros não cancelam reserva ou oferta alheia', async () => {
+    const motorista = await criarUsuario(0)
+    const passageiro = await criarUsuario(1)
+    const terceiro = await criarUsuario(2)
+    const veiculo = await criarVeiculo(motorista)
+    const oferta = await criarOferta(motorista, veiculo, { data_hora_saida: saidaEm(25) })
+    const reserva = await inserirReserva(oferta.id, passageiro.id)
+
+    const reservaAlheia = await cancelarReserva(terceiro, reserva.id)
+    const ofertaAlheia = await cancelarOferta(terceiro, oferta.id)
+
+    expect([401, 403, 404]).toContain(reservaAlheia.status)
+    expect([401, 403, 404]).toContain(ofertaAlheia.status)
+    expect((await contexto.db.get('SELECT status FROM reservas WHERE id = ?', [reserva.id])).status).toBe('CONFIRMADA')
+    expect((await contexto.db.get('SELECT estado FROM ofertas WHERE id = ?', [oferta.id])).estado).toBe('ABERTA')
+
+    const reservaPropria = await cancelarReserva(passageiro, reserva.id)
+    const ofertaPropria = await cancelarOferta(motorista, oferta.id)
+    expect(reservaPropria.status).toBe(200)
+    expect(ofertaPropria.status).toBe(200)
+  })
 })

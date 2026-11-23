@@ -337,6 +337,29 @@ export class UsuarioRepository {
     return resultado.changes > 0
   }
 
+  async anonimizar(id, connection) {
+    const conn = await resolverConexao(connection || this.connection)
+    const usuarioId = inteiroObrigatorio(id, 'id')
+    const atual = await conn.get('SELECT id, conta_ativa FROM usuarios WHERE id = ?', [usuarioId])
+    if (!atual) return null
+    if (Number(atual.conta_ativa) !== 1) return this.buscarPorId(usuarioId, conn)
+
+    await conn.run(
+      `UPDATE usuarios
+       SET nome_completo = ?, email_institucional = ?, senha_hash = ?, telefone = ?,
+           foto_perfil_path = NULL, conta_ativa = 0
+       WHERE id = ?`,
+      [
+        `Usuario Excluido ${usuarioId}`,
+        `excluido-${usuarioId}@anonimizado.invalid`,
+        'hash-anonimizado',
+        '0000000000',
+        usuarioId,
+      ],
+    )
+    return this.buscarPorId(usuarioId, conn)
+  }
+
   async perfilPublico(id, connection) {
     const conn = await resolverConexao(connection || this.connection)
     const row = await conn.get(

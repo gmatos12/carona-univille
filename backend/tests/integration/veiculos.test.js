@@ -220,6 +220,27 @@ describe('Integração de veículos (RF-006, RF-007, RNF-004, RN-002, RN-008, CA
     expect(veiculos[0].placa).toBe(PLACA)
   })
 
+  it('[RNF-002/RN-008] GET /api/veiculos/:id retorna apenas veículo próprio', async () => {
+    const motorista = await criarUsuario()
+    const outro = await criarUsuario({
+      matricula: MATRICULA_TERCEIRO,
+      email_institucional: 'carla.souza@univille.br',
+    })
+    const veiculo = await criarVeiculo(motorista)
+    const veiculoAlheio = await criarVeiculo(outro, { placa: PLACA_OUTRO })
+
+    const proprio = await contexto.request
+      .get(`/api/veiculos/${veiculo.id}`)
+      .set('Authorization', auth(motorista))
+    const alheio = await contexto.request
+      .get(`/api/veiculos/${veiculoAlheio.id}`)
+      .set('Authorization', auth(motorista))
+
+    expect(proprio.status).toBe(200)
+    expect(desembrulhar(proprio.body).placa).toBe(PLACA)
+    expect([401, 403, 404]).toContain(alheio.status)
+  })
+
   it('[RF-006] PUT /api/veiculos/:id atualiza apenas veículo próprio', async () => {
     const motorista = await criarUsuario()
     const outro = await criarUsuario({

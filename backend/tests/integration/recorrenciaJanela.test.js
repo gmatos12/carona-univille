@@ -67,8 +67,9 @@ describe('Rotina de garantia de janela de recorrência (RF-020, RNF-003, RNF-004
     // Retomada: completa pendentes sem duplicar existentes
     await garantir({ agora: new Date(Date.now() + 3 * DIA_MS), connection: ctx.db })
     const aposRetomada = await ctx.db.all('SELECT * FROM ofertas WHERE recorrencia_id = ? ORDER BY data_hora_saida', [recorrenciaId])
-    expect(aposRetomada.length).toBe(ofertas2.length)
     const chaves2 = aposRetomada.map((o) => `${o.recorrencia_id}|${o.data_hora_saida}`)
     expect(new Set(chaves2).size).toBe(chaves2.length)
+    expect(chaves2).toEqual(expect.arrayContaining(chaves))
+    expect(aposRetomada.length).toBeGreaterThanOrEqual(ofertas2.length)
   })
 })

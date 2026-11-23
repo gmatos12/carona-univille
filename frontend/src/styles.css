@@ -470,6 +470,14 @@ dd {
   min-height: auto;
 }
 
+.perfil-exclusao {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: 0.75rem;
+  background: #fff7f6;
+}
+
 .auth-card,
 .veiculos-layout,
 .perfil-layout {

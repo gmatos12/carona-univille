@@ -100,4 +100,26 @@ describe('Integração Minhas Viagens e visibilidade (RF-022, RF-023, RNF-004, R
     const canceladasIds = ids(corpo(canceladasResp).reservas ?? corpo(canceladasResp).ofertas ?? corpo(canceladasResp).resultados ?? corpo(canceladasResp))
     expect(canceladasIds).toContain(Number(cancelada.id))
   })
+
+  it('[RF-007/RN-008/CA-002] minhas viagens mostra a placa apenas a quem pode vê-la', async () => {
+    const motorista = await criarUsuario(0)
+    const passageiro = await criarUsuario(1)
+    const veiculo = await criarVeiculo(motorista)
+    const reservada = await criarOferta(motorista, veiculo, { data_hora_saida: iso(2) })
+    await criarReserva(reservada.id, passageiro.id, 'CONFIRMADA')
+    const cancelada = await criarOferta(motorista, veiculo, { data_hora_saida: iso(-2), estado: 'CANCELADA' })
+    await criarReserva(cancelada.id, passageiro.id, 'CANCELADA')
+
+    const oferecidas = await ctx.request.get('/api/minhas-viagens').set('Authorization', auth(motorista)).query({ tipo: 'oferecidas' })
+    expect(oferecidas.status).toBe(200)
+    expect(JSON.stringify(oferecidas.body)).toContain(veiculo.placa)
+
+    const reservadas = await ctx.request.get('/api/minhas-viagens').set('Authorization', auth(passageiro)).query({ tipo: 'reservadas' })
+    expect(reservadas.status).toBe(200)
+    expect(JSON.stringify(reservadas.body)).toContain(veiculo.placa)
+
+    const canceladas = await ctx.request.get('/api/minhas-viagens').set('Authorization', auth(passageiro)).query({ tipo: 'canceladas' })
+    expect(canceladas.status).toBe(200)
+    expect(JSON.stringify(canceladas.body)).not.toContain(veiculo.placa)
+  })
 })

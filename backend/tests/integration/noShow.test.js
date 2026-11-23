@@ -173,4 +173,33 @@ describe('Integração de no-show e ausência do motorista (RF-018, RF-019, RNF-
     const histR2 = await eventos('reserva', r2.id)
     expect(histR1.length + histR2.length).toBeGreaterThan(0)
   })
+
+  it('[RNF-002/RN-008] somente participantes registram no-show e ausência do motorista', async () => {
+    const motorista = await criarUsuario(0)
+    const passageiro = await criarUsuario(1)
+    const terceiro = await criarUsuario(2)
+    const veiculo = await criarVeiculo(motorista)
+    const oferta = await criarOferta(motorista, veiculo, { data_hora_saida: saidaEm(-1) })
+    const reserva = await inserirReserva(oferta.id, passageiro.id)
+
+    const noShowTerceiro = await contexto.request
+      .post(`/api/reservas/${reserva.id}/no-show`)
+      .set('Authorization', auth(terceiro))
+      .send({})
+    const ausenciaTerceiro = await contexto.request
+      .post(`/api/ofertas/${oferta.id}/ausencia-motorista`)
+      .set('Authorization', auth(terceiro))
+      .send({})
+
+    expect([401, 403, 404]).toContain(noShowTerceiro.status)
+    expect([401, 403, 404]).toContain(ausenciaTerceiro.status)
+    expect((await contexto.db.get('SELECT status FROM reservas WHERE id = ?', [reserva.id])).status).toBe('CONFIRMADA')
+    expect((await contexto.db.get('SELECT estado FROM ofertas WHERE id = ?', [oferta.id])).estado).toBe('ABERTA')
+
+    const noShowMotorista = await contexto.request
+      .post(`/api/reservas/${reserva.id}/no-show`)
+      .set('Authorization', auth(motorista))
+      .send({})
+    expect(noShowMotorista.status).toBe(200)
+  })
 })

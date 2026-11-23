@@ -1,5 +1,5 @@
 import api from './api.js'
-import { setUser } from '../state/auth.js'
+import { logout, setUser } from '../state/auth.js'
 
 export function extrairPerfil(resposta) {
   return resposta?.perfil ?? resposta?.usuario ?? resposta ?? null
@@ -71,6 +71,12 @@ export async function perfilPublico(usuarioId) {
   return extrairPerfilPublico(resposta)
 }
 
+export async function excluirConta() {
+  const resposta = await api.delete('/me')
+  logout()
+  return resposta ?? { excluida: true }
+}
+
 export const usuarioService = {
   obterPerfil,
   getPerfil: obterPerfil,
@@ -83,6 +89,9 @@ export const usuarioService = {
   removerFoto,
   excluirFoto: removerFoto,
   deleteFoto: removerFoto,
+  excluirConta,
+  excluirMinhaConta: excluirConta,
+  deleteConta: excluirConta,
   perfilPublico,
   buscarPerfilPublico: perfilPublico,
   getPerfilPublico: perfilPublico,

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import PerfilPublico from '../components/PerfilPublico.jsx'
 import {
   atualizarPerfil,
   enviarFoto,
+  excluirConta,
   obterPerfil,
   removerFoto,
 } from '../services/usuarioService.js'
@@ -44,9 +46,12 @@ export function PerfilPage() {
   const [erros, setErros] = useState({})
   const [erroGeral, setErroGeral] = useState('')
   const [erroFoto, setErroFoto] = useState('')
+  const [erroExclusao, setErroExclusao] = useState('')
   const [sucesso, setSucesso] = useState('')
   const [carregando, setCarregando] = useState(true)
   const [salvando, setSalvando] = useState(false)
+  const [excluindo, setExcluindo] = useState(false)
+  const navegar = useNavigate()
 
   useEffect(() => {
     let ativo = true
@@ -158,6 +163,26 @@ export function PerfilPage() {
     }
   }
 
+  async function excluirMinhaConta() {
+    const confirmado = window.confirm(
+      'Excluir sua conta? Suas ofertas e reservas futuras serão canceladas, seus dados serão anonimizados e você não poderá criar novas ofertas ou reservas.',
+    )
+    if (!confirmado) return
+
+    setErroGeral('')
+    setErroExclusao('')
+    setSucesso('')
+    setExcluindo(true)
+
+    try {
+      await excluirConta()
+      navegar('/login', { replace: true })
+    } catch (error) {
+      setErroExclusao(mensagemErro(error, 'Não foi possível excluir a conta.'))
+      setExcluindo(false)
+    }
+  }
+
   const campos = [
     { name: 'nome_completo', label: 'Nome completo', type: 'text', autoComplete: 'name' },
     { name: 'email_institucional', label: 'E-mail institucional', type: 'email', autoComplete: 'email' },
@@ -183,7 +208,8 @@ export function PerfilPage() {
       )}
 
       {!carregando && perfil && (
-        <div className="perfil-layout">
+        <>
+          <div className="perfil-layout">
           <section className="perfil-foto" aria-labelledby="perfil-foto-titulo">
             <h2 id="perfil-foto-titulo">Foto de perfil</h2>
             <p className="form-hint">A foto é opcional e pode ser adicionada ou removida.</p>
@@ -252,8 +278,26 @@ export function PerfilPage() {
                 {salvando ? 'Salvando...' : 'Salvar alterações'}
               </button>
             </form>
+            </section>
+          </div>
+
+          <section className="perfil-exclusao" aria-labelledby="perfil-exclusao-titulo">
+            <h2 id="perfil-exclusao-titulo">Excluir conta</h2>
+            <p className="form-hint">
+              A exclusão cancela ofertas e reservas futuras sem penalidade, anonimiza seus dados e encerra a sessão.
+            </p>
+
+            {erroExclusao && (
+              <p className="auth-message auth-message-error" role="alert" aria-live="assertive">
+                {erroExclusao}
+              </p>
+            )}
+
+            <button type="button" onClick={excluirMinhaConta} disabled={excluindo}>
+              {excluindo ? 'Excluindo...' : 'Excluir minha conta'}
+            </button>
           </section>
-        </div>
+        </>
       )}
 
       {perfil?.id !== undefined && perfil?.id !== null && (
