@@ -262,11 +262,11 @@ description: "Task list for feature implementation"
 **Purpose**: Segurança, cobertura, documentação, rastreabilidade e validação final ponta a ponta.
 
 - [X] T084 [P] Revisar autorização e visibilidade em todos os endpoints, garantindo "Placa visível apenas para o dono do veículo e passageiros com reserva confirmada na viagem." e nenhuma exposição de matrícula/e-mail/telefone/penalidades em `backend/src/middlewares/authorize.js`, `backend/src/services/usuarioService.js`, `backend/src/services/veiculoService.js` e `backend/src/services/ofertaService.js`. Requisitos: RF-004, RF-007, RNF-002, RN-008, CA-002
-- [ ] T085 [P] Revisar validação, sanitização e mensagens de erro em `backend/src/middlewares/validate.js`, `backend/src/middlewares/errorHandler.js`, `backend/src/controllers/authController.js`, `backend/src/controllers/usuarioController.js`, `backend/src/controllers/ofertaController.js` e `backend/src/controllers/reservaController.js`. Requisitos: RNF-001, RNF-002, RNF-005, CA-002
-- [ ] T086 Executar suíte completa e gerar relatório de cobertura Vitest com resumo no terminal e HTML em `backend/coverage/`, confirmando meta ≥ 80% em `backend/package.json`. Requisitos: RNF-004, RNF-006
-- [ ] T087 Atualizar `README.md` com seção inicial de resultados de testes/cobertura contendo percentuais de linhas/funções/branches/statements, total de testes e comando para gerar/atualizar o relatório em `README.md`. Requisitos: RNF-004, RNF-005, RNF-006
-- [ ] T088 [P] Validar os oito cenários ponta a ponta e registrar ajustes em `specs/001-carona-univille/quickstart.md`. Requisitos: RNF-004, RNF-006
-- [ ] T089 Revisar rastreabilidade RF/RN/CA ↔ código ↔ testes e fechar o checklist de qualidade em `specs/001-carona-univille/checklists/requirements.md`. Requisitos: RNF-006
+- [X] T085 [P] Revisar validação, sanitização e mensagens de erro em `backend/src/middlewares/validate.js`, `backend/src/middlewares/errorHandler.js`, `backend/src/controllers/authController.js`, `backend/src/controllers/usuarioController.js`, `backend/src/controllers/ofertaController.js` e `backend/src/controllers/reservaController.js`. Requisitos: RNF-001, RNF-002, RNF-005, CA-002
+- [X] T086 Executar suíte completa e gerar relatório de cobertura Vitest com resumo no terminal e HTML em `backend/coverage/`, confirmando meta ≥ 80% em `backend/package.json`. Requisitos: RNF-004, RNF-006
+- [X] T087 Atualizar `README.md` com seção inicial de resultados de testes/cobertura contendo percentuais de linhas/funções/branches/statements, total de testes e comando para gerar/atualizar o relatório em `README.md`. Requisitos: RNF-004, RNF-005, RNF-006
+- [X] T088 [P] Validar os oito cenários ponta a ponta e registrar ajustes em `specs/001-carona-univille/quickstart.md`. Requisitos: RNF-004, RNF-006
+- [X] T089 Revisar rastreabilidade RF/RN/CA ↔ código ↔ testes e fechar o checklist de qualidade em `specs/001-carona-univille/checklists/requirements.md`. Requisitos: RNF-006
 
 ---
 

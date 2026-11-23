@@ -1,6 +1,8 @@
-import { STATUS, ValidationError, SemanticValidationError } from './errorHandler.js'
+import { STATUS, ApiError, ValidationError, SemanticValidationError } from './errorHandler.js'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const UNSAFE_PATH_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key)
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -59,11 +61,19 @@ function getPath(source, field) {
   let current = source
 
   for (const part of parts) {
-    if (current === null || typeof current !== 'object') return undefined
+    if (current === null || typeof current !== 'object' || !hasOwn(current, part)) return undefined
     current = current[part]
   }
 
   return current
+}
+
+function assignPathValue(target, key, value) {
+  if (UNSAFE_PATH_KEYS.has(key)) {
+    Object.defineProperty(target, key, { value, enumerable: true, writable: true, configurable: true })
+    return
+  }
+  target[key] = value
 }
 
 function setPath(target, field, value) {
@@ -72,11 +82,11 @@ function setPath(target, field, value) {
 
   for (let index = 0; index < parts.length - 1; index += 1) {
     const key = parts[index]
-    if (!isPlainObject(current[key])) current[key] = {}
+    if (!hasOwn(current, key) || !isPlainObject(current[key])) assignPathValue(current, key, {})
     current = current[key]
   }
 
-  current[parts[parts.length - 1]] = value
+  assignPathValue(current, parts[parts.length - 1], value)
 }
 
 function setSource(req, source, value) {
@@ -93,10 +103,13 @@ function setSource(req, source, value) {
 
 function fail(field, message, status = STATUS.BAD_REQUEST) {
   const details = [{ field, message }]
+  if (status === STATUS.BAD_REQUEST) {
+    throw new ValidationError('Dados inválidos', details)
+  }
   if (status === STATUS.UNPROCESSABLE) {
     throw new SemanticValidationError('Dados não processáveis', details)
   }
-  throw new ValidationError('Dados inválidos', details)
+  throw new ApiError(status, message, 'API_ERROR', details)
 }
 
 function coerceValue(value, definition, options) {
@@ -179,7 +192,12 @@ function validateValue(input, definition, context) {
         const pattern = definition.pattern instanceof RegExp
           ? definition.pattern
           : new RegExp(definition.pattern)
-        if (!pattern.test(value)) fail(field, 'Formato inválido')
+        const stateful = pattern.global || pattern.sticky
+        const lastIndex = stateful ? pattern.lastIndex : 0
+        if (stateful) pattern.lastIndex = 0
+        const matches = pattern.test(value)
+        if (stateful) pattern.lastIndex = lastIndex
+        if (!matches) fail(field, 'Formato inválido')
       }
       if (definition.format === 'email' && !EMAIL_PATTERN.test(value)) {
         fail(field, 'E-mail inválido')
@@ -285,8 +303,8 @@ function validateSource(source, schema, context) {
 export function validateRequest(schemas = {}) {
   return (req, res, next) => {
     try {
-      for (const source of ['params', 'query', 'body']) {
-        if (!schemas[source]) continue
+      for (const source of Object.keys(schemas)) {
+        if (source === 'options' || !schemas[source]) continue
         const sourceOptions = {
           coerce: source === 'params' || source === 'query',
           ...(schemas.options ?? {}),

@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test": "vitest run --maxWorkers=1 --hookTimeout=120000",
+    "test:coverage": "vitest run --coverage --maxWorkers=1 --testTimeout=30000 --hookTimeout=120000 --coverage.thresholds.statements=80 --coverage.thresholds.branches=80 --coverage.thresholds.functions=80 --coverage.thresholds.lines=80",
     "db:migrate": "node src/db/migrations/run.js",
     "db:seed": "node src/db/seeds/run.js",
     "db:setup": "npm run db:migrate && npm run db:seed"

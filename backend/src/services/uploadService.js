@@ -72,7 +72,7 @@ export class UploadService {
   async salvar(arquivo, usuarioId) {
     const validacao = validarArquivo(arquivo)
     if (!validacao.valido) throw new UnprocessableError(validacao.erro)
-    if (!arquivo || !arquivo.buffer) return null
+    if (!arquivo || !Buffer.isBuffer(arquivo.buffer) || arquivo.buffer.length === 0) return null
 
     await fs.mkdir(this.uploadDir, { recursive: true })
     const nome = `${String(usuarioId)}-${randomUUID()}.${validacao.extensao}`

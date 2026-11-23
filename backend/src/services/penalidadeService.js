@@ -22,6 +22,7 @@ const NATUREZAS_EXCLUSAO_CONTA = new Set([
 
 export function normalizarNaturezaCancelamento(value) {
   return String(value ?? '')
+    .trim()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()

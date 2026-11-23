@@ -180,7 +180,9 @@ export function notFoundHandler(req, res, next) {
 }
 
 export function asyncHandler(handler) {
-  return (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next)
+  return (req, res, next) => Promise.resolve()
+    .then(() => handler(req, res, next))
+    .catch(next)
 }
 
 export default {

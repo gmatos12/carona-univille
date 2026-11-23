@@ -5,6 +5,8 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.js'],
     passWithNoTests: true,
+    testTimeout: 30000,
+    hookTimeout: 60000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],

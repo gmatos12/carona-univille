@@ -62,15 +62,22 @@ export function authorizeSelf(options = {}) {
   }, options)
 }
 
+function evaluatePredicates(predicates, req) {
+  return Promise.all(predicates.map((predicate) => {
+    if (typeof predicate !== 'function') return Promise.resolve(false)
+    return Promise.resolve().then(() => predicate(req)).then(isAllowed)
+  }))
+}
+
 export function authorizeAny(predicates, options = {}) {
   if (!Array.isArray(predicates)) {
     throw new TypeError('authorizeAny exige uma lista de verificações')
   }
 
-  return authorize((req) => predicates.some((predicate) => {
-    if (typeof predicate !== 'function') return false
-    return predicate(req) === true
-  }), options)
+  return authorize(
+    (req) => evaluatePredicates(predicates, req).then((results) => results.some(Boolean)),
+    options,
+  )
 }
 
 export function authorizeAll(predicates, options = {}) {
@@ -78,10 +85,10 @@ export function authorizeAll(predicates, options = {}) {
     throw new TypeError('authorizeAll exige uma lista de verificações')
   }
 
-  return authorize((req) => predicates.every((predicate) => {
-    if (typeof predicate !== 'function') return false
-    return predicate(req) === true
-  }), options)
+  return authorize(
+    (req) => evaluatePredicates(predicates, req).then((results) => results.every(Boolean)),
+    options,
+  )
 }
 
 export const authorizeResource = authorizeOwner
