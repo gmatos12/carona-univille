@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import PerfilPublico from '../components/PerfilPublico.jsx'
 import {
   atualizarPerfil,
-  enviarFoto,
+  enviarFoto as enviarFotoServico,
   excluirConta,
   obterPerfil,
   removerFoto,
@@ -142,7 +142,7 @@ export function PerfilPage() {
     }
 
     try {
-      const dados = await enviarFoto(arquivo)
+      const dados = await enviarFotoServico(arquivo)
       await aplicarRespostaFoto(dados)
     } catch (error) {
       setErroFoto(mensagemErro(error, 'Não foi possível salvar a foto de perfil.'))
