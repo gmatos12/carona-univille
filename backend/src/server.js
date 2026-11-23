@@ -5,7 +5,9 @@ import { closeConnection } from './db/connection.js'
 import { createApp } from './app.js'
 import { iniciarSchedulerRecorrencia, pararSchedulerRecorrencia } from './services/recorrenciaScheduler.js'
 
-dotenv.config({ quiet: true })
+const BACKEND_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+
+dotenv.config({ path: path.join(BACKEND_ROOT, '.env'), quiet: true })
 
 const DEFAULT_PORT = 3000
 

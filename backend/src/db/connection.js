@@ -1,8 +1,10 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import sqlite3 from 'sqlite3'
 
+const BACKEND_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DEFAULT_DB_PATH = './carona.db'
 const BUSY_TIMEOUT_MS = 5000
 
@@ -14,7 +16,8 @@ function parseBoolean(value, fallback = false) {
 
 function resolveDatabasePath(value) {
   const selected = value || process.env.DB_PATH || DEFAULT_DB_PATH
-  return selected === ':memory:' ? selected : path.resolve(selected)
+  if (selected === ':memory:') return selected
+  return path.isAbsolute(selected) ? path.resolve(selected) : path.resolve(BACKEND_ROOT, selected)
 }
 
 async function ensureDatabaseDirectory(filePath) {
