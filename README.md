@@ -134,3 +134,34 @@ A meta mínima de 80% é validada pelo comando abaixo. Para gerar ou atualizar o
 cd backend
 npm run test:coverage
 ```
+
+//como iniciar 1. Instalar dependências
+
+Backend:
+cd backend
+npm install
+
+
+Frontend:
+cd frontend
+npm install
+
+
+2. Preparar o banco
+cd backend
+npm run db:setup
+
+
+3. Iniciar o sistema
+
+Backend:
+cd backend
+npm run dev
+
+
+Frontend (segundo terminal):
+cd frontend
+npm run dev
+
+
+4. Acessar: http://localhost:5173
