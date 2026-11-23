@@ -105,7 +105,7 @@ export async function atualizar(ofertaId, dados) {
 
 export const ofertaService = {
   listar,
-  list, listarTodas: listar,
+  listarTodas: listar,
   buscar,
   search: buscar,
   buscarPorId,

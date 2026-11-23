@@ -1,10 +1,29 @@
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from '../state/auth.js'
+import BuscaPage from '../pages/BuscaPage.jsx'
+import CadastroPage from '../pages/CadastroPage.jsx'
+import HomePage from '../pages/HomePage.jsx'
+import LoginPage from '../pages/LoginPage.jsx'
+import MinhasViagensPage from '../pages/MinhasViagensPage.jsx'
+import OfertaDetalhePage from '../pages/OfertaDetalhePage.jsx'
+import OfertaFormPage from '../pages/OfertaFormPage.jsx'
+import PerfilPage from '../pages/PerfilPage.jsx'
+import RecorrenciasPage from '../pages/RecorrenciasPage.jsx'
+import VeiculosPage from '../pages/VeiculosPage.jsx'
 import ProtectedRoute from './ProtectedRoute.jsx'
 
-const pageModules = typeof import.meta.glob === 'function'
-  ? import.meta.glob('../pages/*.jsx', { eager: true })
-  : {}
+const PAGE_COMPONENTS = {
+  BuscaPage,
+  CadastroPage,
+  HomePage,
+  LoginPage,
+  MinhasViagensPage,
+  OfertaDetalhePage,
+  OfertaFormPage,
+  PerfilPage,
+  RecorrenciasPage,
+  VeiculosPage,
+}
 
 const ROUTE_DEFINITIONS = [
   { id: 'home', path: '/', title: 'Início', page: 'HomePage', nav: true },
@@ -92,21 +111,14 @@ function NotFound() {
   )
 }
 
-function resolvePageComponent(page) {
-  const module = pageModules[`../pages/${page}.jsx`]
-  if (!module) return null
-
-  const component = module.default || module[page]
-  if (!component) throw new Error(`Página ${page} sem export padrão`)
-  return component
-}
-
 function buildRoutes() {
   return ROUTE_DEFINITIONS.map((definition) => {
-    const Component = resolvePageComponent(definition.page)
+    const Component = PAGE_COMPONENTS[definition.page]
+    if (!Component) throw new Error(`Página ${definition.page} não encontrada`)
+
     return {
       ...definition,
-      element: Component ? <Component /> : <PagePlaceholder title={definition.title} />,
+      element: <Component />,
     }
   })
 }
