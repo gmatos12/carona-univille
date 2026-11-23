@@ -2,6 +2,7 @@
 import { cancelarOferta } from '../controllers/cancelamentoController.js'
 import { authenticate } from '../middlewares/auth.js'
 import { concluir, iniciar } from '../controllers/execucaoController.js'
+import { registrarAusenciaMotorista } from '../controllers/noShowController.js'
 import {
   atualizar,
   buscar,
@@ -20,6 +21,7 @@ router.put('/:id', atualizar)
 router.post('/:id/iniciar', iniciar)
 router.post('/:id/concluir', concluir)
 router.post('/:id/cancelar', cancelarOferta)
+router.post('/:id/ausencia-motorista', registrarAusenciaMotorista)
 
 export { router, router as routes }
 export default router
