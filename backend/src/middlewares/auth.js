@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import jwt from 'jsonwebtoken'
 import { usuarioRepository } from '../repositories/usuarioRepository.js'
 import { asyncHandler, ForbiddenError } from './errorHandler.js'
@@ -14,8 +15,10 @@ class AuthConfigurationError extends Error {
   }
 }
 
+const GENERATED_JWT_SECRET = process.env.JWT_SECRET ? null : randomBytes(48).toString('hex')
+
 function getJwtSecret() {
-  const secret = process.env.JWT_SECRET
+  const secret = process.env.JWT_SECRET || GENERATED_JWT_SECRET
   if (!secret) {
     throw new AuthConfigurationError('JWT_SECRET não configurado')
   }
