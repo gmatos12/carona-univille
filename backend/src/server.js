@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
 import { closeConnection } from './db/connection.js'
 import { createApp } from './app.js'
+import { iniciarSchedulerRecorrencia, pararSchedulerRecorrencia } from './services/recorrenciaScheduler.js'
 
 dotenv.config({ quiet: true })
 
@@ -25,13 +26,18 @@ export function startServer(options = {}) {
     const address = server.address()
     const activePort = address && typeof address === 'object' ? address.port : port
     console.log(`Carona Univille API pronta na porta ${activePort}`)
+    if (options.iniciarScheduler !== false) iniciarSchedulerRecorrencia(options.scheduler)
   })
 
   return server
 }
 
 export async function shutdownServer(server) {
-  if (!server || !server.listening) return
+  pararSchedulerRecorrencia()
+  if (!server || !server.listening) {
+    await closeConnection().catch(() => undefined)
+    return
+  }
 
   await new Promise((resolve) => {
     server.close(resolve)
