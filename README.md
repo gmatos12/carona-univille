@@ -45,7 +45,7 @@ cd backend
 cp .env.example .env
 ```
 
-Edite o arquivo `backend/.env` criado e configure as variáveis conforme o seu ambiente. Defina um valor forte e exclusivo para `JWT_SECRET`; não divulgue nem versione esse valor. O arquivo `.env` deve permanecer fora do controle de versão.
+Edite o arquivo `backend/.env` criado e configure as variáveis conforme o seu ambiente. Defina um valor forte e exclusivo para `JWT_SECRET`; não divulgue nem versione esse valor. O arquivo `.env` deve permanecer fora do controle de versão. Se JWT nao for definido será definido automaticamente.
 
 Antes da primeira execução, prepare o banco de dados:
 
